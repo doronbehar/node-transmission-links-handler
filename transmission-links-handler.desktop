@@ -4,6 +4,6 @@ Name=Transmission Links handler
 Comment=Interactive script to run in minimal desktop environments that will add magnet links or torrent files to transmission-daemon
 Icon=utilities-terminal
 Terminal=true
-Exec=urxvt -e transmission-link-handler %U
+Exec=urxvt -title "Transmission Links Handler" -e transmission-links-handler %U
 Categories=ConsoleOnly;System;FileTools
 MimeType=application/x-bittorrent;x-scheme-handler/magnet;
