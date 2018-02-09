@@ -1,0 +1,24 @@
+{
+  "name": "transmission-links-handler",
+  "version": "0.0.1",
+  "description": "Interactive script to run in minimal desktop environments that will add magnet links or torrent files to transmission-daemon",
+  "main": "transmission-links-handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/doronbehar/node-transmission-links-handler.git"
+  },
+  "keywords": [
+    "transmission",
+    "interactive",
+    "script"
+  ],
+  "author": "doronbehar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/doronbehar/node-transmission-links-handler/issues"
+  },
+  "homepage": "https://github.com/doronbehar/node-transmission-links-handler#readme"
+}
