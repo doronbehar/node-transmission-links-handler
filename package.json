@@ -20,5 +20,10 @@
   "bugs": {
     "url": "https://github.com/doronbehar/node-transmission-links-handler/issues"
   },
-  "homepage": "https://github.com/doronbehar/node-transmission-links-handler#readme"
+  "homepage": "https://github.com/doronbehar/node-transmission-links-handler#readme",
+  "dependencies": {
+    "argparse": "^1.0.9",
+    "magnet-uri": "^5.1.7",
+    "transmission": "^0.4.9"
+  }
 }
