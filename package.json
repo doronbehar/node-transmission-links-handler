@@ -23,6 +23,7 @@
   "homepage": "https://github.com/doronbehar/node-transmission-links-handler#readme",
   "dependencies": {
     "argparse": "^1.0.9",
+    "inquirer": "^5.1.0",
     "magnet-uri": "^5.1.7",
     "transmission": "^0.4.9"
   },
