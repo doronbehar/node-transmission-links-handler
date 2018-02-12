@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 var Argparse = require('argparse').ArgumentParser;
-
 var parser = new Argparse({
   version: '0.0.1',
   addHelp: true,
@@ -87,7 +86,6 @@ delete transmissionConnection.torrents;
 var transmission = new Transmission(transmissionConnection);
 
 // Check connection to transmission and exit if can't connect
-console.dir(transmissionConnection);
 transmission.sessionStats(function (err, result) {
   if (err) {
     console.error('can\'t connect to transmission');
@@ -96,23 +94,56 @@ transmission.sessionStats(function (err, result) {
 });
 
 var inquirer = require('inquirer');
+var Magnet = require('magnet-uri');
+var ParseTorrentFile = require('parse-torrent-file');
+var path = require('path');
+var fs = require('fs');
 
-for (var t in args.torrents) {
-  if (t.search(/^magnet:/)) {
-    var magnetLink = args.torrents[t];
-    var Magnet = require('magnet-uri');
-    var magnet = Magnet.decode(magnetLink);
-    inquirer.prompt({
-      type: 'confirm',
-      name: 'add',
-      message: 'Would you like to add the torrent "' + magnet.dn + '"?',
-      default: true
-    }).then(answers => {
-      if (answers.add) {
-        // TODO
-        transmission.add();
-      }
-    });
+// variable used for arguments addition confirmations
+var myTorrent = {};
+myTorrent.iterator = 0;
+function ask () {
+  myTorrent.argument = args.torrents[myTorrent.iterator];
+  if (myTorrent.argument.match(/magnet:/)) {
+    var magnet;
+    try {
+      magnet = Magnet.decode(myTorrent.argument);
+    } catch (e) {
+      console.error(e);
+      process.exit(2);
+    }
+    myTorrent.name = magnet.dn;
   } else {
+    console.log('Trying to add as a torrent: ' + myTorrent.argument);
+    myTorrent.file = fs.readFileSync(path.join(__dirname, myTorrent.argument));
+    var t;
+    try {
+      t = ParseTorrentFile(myTorrent.file);
+    } catch (e) {
+      console.error(e);
+      process.exit(2);
+    }
+    myTorrent.name = t.name;
   }
+  inquirer.prompt({
+    type: 'confirm',
+    name: 'add',
+    message: 'Would you like to add the torrent "' + myTorrent.name + '"?',
+    default: true
+  }).then(answers => {
+    if (answers.add) {
+      console.log('adding a torrent');
+      // TODO
+      // transmission.add();
+    } else {
+      if (myTorrent.iterator !== args.torrents.length) {
+        myTorrent.iterator++;
+        ask();
+      } else {
+        return 0;
+      }
+    }
+  });
 }
+
+ask();
