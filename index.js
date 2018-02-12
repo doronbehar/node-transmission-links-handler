@@ -135,13 +135,12 @@ function ask () {
       console.log('adding a torrent');
       // TODO
       // transmission.add();
+    }
+    if (myTorrent.iterator < args.torrents.length - 1) {
+      myTorrent.iterator++;
+      ask();
     } else {
-      if (myTorrent.iterator !== args.torrents.length) {
-        myTorrent.iterator++;
-        ask();
-      } else {
-        return 0;
-      }
+      return 0;
     }
   });
 }
