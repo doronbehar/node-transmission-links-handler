@@ -1,5 +1,13 @@
 #!/usr/bin/env node
 
+var inquirer = require('inquirer');
+
+var Magnet = require('magnet-uri');
+var Transmission = require('transmission');
+var ParseTorrentFile = require('parse-torrent-file');
+var path = require('path');
+var fs = require('fs');
+
 var Argparse = require('argparse').ArgumentParser;
 var parser = new Argparse({
   version: '0.0.1',
@@ -63,9 +71,20 @@ parser.addArgument(
   }
 );
 
+// exit the program and prompt for confirmation before actually exiting
+function exitWithConfirmation (problem) {
+  inquirer.prompt({
+    type: 'input',
+    name: 'continue',
+    message: problem + ', press any key to continue'
+  }).then(answers => {
+    if (answers.continue) {
+      process.exit(3);
+    }
+  });
+}
 var args = parser.parseArgs();
 
-var Transmission = require('transmission');
 
 var transmissionConnection = {};
 
@@ -88,16 +107,10 @@ var transmission = new Transmission(transmissionConnection);
 // Check connection to transmission and exit if can't connect
 transmission.sessionStats(function (err, result) {
   if (err) {
-    console.error('can\'t connect to transmission');
+    exitWithConfirmation('can\'t connect to transmission');
     throw err;
   }
 });
-
-var inquirer = require('inquirer');
-var Magnet = require('magnet-uri');
-var ParseTorrentFile = require('parse-torrent-file');
-var path = require('path');
-var fs = require('fs');
 
 // variable used for arguments addition confirmations
 var myTorrent = {};
@@ -114,7 +127,6 @@ function ask () {
     }
     myTorrent.name = magnet.dn;
   } else {
-    console.log('Trying to add as a torrent: ' + myTorrent.argument);
     myTorrent.file = fs.readFileSync(path.join(__dirname, myTorrent.argument));
     var t;
     try {
