@@ -92,23 +92,25 @@ for (var property in args) {
     transmissionConnection[property] = String(args[property]);
   }
 }
+
+var authentication;
 if (args.authenv) {
   if (process.env.TR_AUTH) {
-    if (process.env.TR_AUTH.match(/:/)) {
-      [ transmissionConnection.username, transmissionConnection.password ] = process.env.TR_AUTH.split(':');
-    } else {
-      exitWithConfirmation('It doesn\'t seem the environmaental variable TR_AUTH is in the right format');
-    }
+    authentication = process.env.TR_AUTH;
   } else {
     exitWithConfirmation('It seems that TR_AUTH is empty');
   }
 } else if (args.auth) {
-  if (args.auth.match(/:/)) {
-    [ transmissionConnection.username, transmissionConnection.password ] = args.auth[0].split(':');
+  authentication = args.auth;
+}
+if (authentication) {
+  if (authentication.match(/^[a-zA-Z0-9]+:[^:]+$/)) {
+    [ transmissionConnection.username, transmissionConnection.password ] = authentication.split(':');
   } else {
-    exitWithConfirmation('Please specify a valid authentication username:password');
+    exitWithConfirmation('It doesn\'t seem like authentication is provided in the right format: "username:password"');
   }
 }
+
 delete transmissionConnection.authenv;
 delete transmissionConnection.auth;
 delete transmissionConnection.torrents;
