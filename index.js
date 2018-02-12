@@ -18,7 +18,7 @@ var parser = new Argparse({
 parser.addArgument(
   [ '-ne', '--authenv' ],
   {
-    help: 'Set the authentication information from the TR_AURH environment variable which must be formatted as username:password',
+    help: 'Set the authentication information from the TR_AUTH environment variable which must be formatted as username:password',
     action: 'storeTrue',
     nargs: 0
   }
@@ -85,7 +85,6 @@ function exitWithConfirmation (problem) {
 }
 var args = parser.parseArgs();
 
-
 var transmissionConnection = {};
 
 for (var property in args) {
@@ -94,9 +93,21 @@ for (var property in args) {
   }
 }
 if (args.authenv) {
-  [ transmissionConnection.username, transmissionConnection.password ] = process.env.TR_AUTH.split(':');
+  if (process.env.TR_AUTH) {
+    if (process.env.TR_AUTH.match(/:/)) {
+      [ transmissionConnection.username, transmissionConnection.password ] = process.env.TR_AUTH.split(':');
+    } else {
+      exitWithConfirmation('It doesn\'t seem the environmaental variable TR_AUTH is in the right format');
+    }
+  } else {
+    exitWithConfirmation('It seems that TR_AUTH is empty');
+  }
 } else if (args.auth) {
-  [ transmissionConnection.username, transmissionConnection.password ] = args.auth[0].split(':');
+  if (args.auth.match(/:/)) {
+    [ transmissionConnection.username, transmissionConnection.password ] = args.auth[0].split(':');
+  } else {
+    exitWithConfirmation('Please specify a valid authentication username:password');
+  }
 }
 delete transmissionConnection.authenv;
 delete transmissionConnection.auth;
