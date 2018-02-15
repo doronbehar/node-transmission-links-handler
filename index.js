@@ -7,6 +7,9 @@ var Transmission = require('transmission');
 var ParseTorrentFile = require('parse-torrent-file');
 var path = require('path');
 var fs = require('fs');
+var xdgBasedir = require('xdg-basedir');
+process.env.NODE_CONFIG_DIR = xdgBasedir.config + '/transmission-links-handler';
+var config = require('config');
 
 var Argparse = require('argparse').ArgumentParser;
 var parser = new Argparse({

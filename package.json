@@ -23,9 +23,12 @@
   "homepage": "https://github.com/doronbehar/node-transmission-links-handler#readme",
   "dependencies": {
     "argparse": "^1.0.9",
+    "config": "^1.29.4",
     "inquirer": "^5.1.0",
     "magnet-uri": "^5.1.7",
-    "transmission": "^0.4.9"
+    "parse-torrent-file": "^4.0.3",
+    "transmission": "^0.4.9",
+    "xdg-basedir": "^3.0.0"
   },
   "devDependencies": {
     "eslint": "^4.17.0",
