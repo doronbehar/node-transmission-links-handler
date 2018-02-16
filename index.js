@@ -90,9 +90,48 @@ var args = parser.parseArgs();
 
 var transmissionConnection = {};
 
-for (var property in args) {
-  if (args.hasOwnProperty(property) && args[property]) {
-    transmissionConnection[property] = String(args[property]);
+if (args.host || config.host) {
+  if (typeof (config.host) === 'string') {
+    transmissionConnection.host = config.host;
+  } else {
+    exitWithConfirmation('Please fix your configuration variable "host" to type "string"');
+  }
+  if (args.host) {
+    transmissionConnection.host = String(args.host);
+  }
+  if (!transmissionConnection.host.match(/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$/)) {
+    exitWithConfirmation('Please provide a valid host name');
+  }
+}
+
+if (args.url || config.url) {
+  if (typeof (config.url) === 'string') {
+    transmissionConnection.url = config.url;
+  } else {
+    exitWithConfirmation('Please fix your configuration variable "url" to type "string"');
+  }
+  if (args.url) {
+    transmissionConnection.url = String(args.url);
+  }
+}
+
+if (args.port || config.port) {
+  if (typeof (config.port) === 'number') {
+    transmissionConnection.port = config.port;
+  }
+  if (args.port) {
+    transmissionConnection.port = Number(args.port);
+  }
+}
+
+if (args.ssl || config.ssl) {
+  if (typeof (config.ssl) === 'boolean') {
+    transmissionConnection.ssl = config.ssl;
+  } else {
+    exitWithConfirmation('Please fix your configuration variable "ssl" to type "boolean"');
+  }
+  if (args.ssl) {
+    transmissionConnection.ssl = args.ssl;
   }
 }
 
@@ -114,10 +153,6 @@ if (authentication) {
     exitWithConfirmation('It doesn\'t seem like authentication is provided in the right format: "username:password"');
   }
 }
-
-delete transmissionConnection.authenv;
-delete transmissionConnection.auth;
-delete transmissionConnection.torrents;
 
 var transmission = new Transmission(transmissionConnection);
 
