@@ -107,7 +107,7 @@ if (args.authenv) {
   authentication = args.auth;
 }
 if (authentication) {
-  if (authentication.match(/^[a-zA-Z0-9]+:[^:]+$/)) {
+  if (authentication.match(/^[a-zA-Z0-9]+:[^ :]+$/)) {
     [ transmissionConnection.username, transmissionConnection.password ] = authentication.split(':');
   } else {
     exitWithConfirmation('It doesn\'t seem like authentication is provided in the right format: "username:password"');
