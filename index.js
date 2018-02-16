@@ -8,8 +8,24 @@ var ParseTorrentFile = require('parse-torrent-file');
 var path = require('path');
 var fs = require('fs');
 var xdgBasedir = require('xdg-basedir');
+// exit the program and prompt for confirmation before actually exiting
+function exitWithConfirmation (problem) {
+  inquirer.prompt({
+    type: 'input',
+    name: 'continue',
+    message: problem + ', press any key to continue'
+  }).then(answers => {
+    if (answers.continue) {
+      process.exit(3);
+    }
+  });
+}
 process.env.NODE_CONFIG_DIR = xdgBasedir.config + '/transmission-links-handler';
-var config = require('config');
+try {
+  var config = require('config');
+} catch (e) {
+  exitWithConfirmation('The configuration file is either not readable or has no valid syntax');
+}
 
 var Argparse = require('argparse').ArgumentParser;
 var parser = new Argparse({
@@ -74,18 +90,6 @@ parser.addArgument(
   }
 );
 
-// exit the program and prompt for confirmation before actually exiting
-function exitWithConfirmation (problem) {
-  inquirer.prompt({
-    type: 'input',
-    name: 'continue',
-    message: problem + ', press any key to continue'
-  }).then(answers => {
-    if (answers.continue) {
-      process.exit(3);
-    }
-  });
-}
 var args = parser.parseArgs();
 
 var transmissionConnection = {};
