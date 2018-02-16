@@ -97,14 +97,15 @@ for (var property in args) {
 }
 
 var authentication;
-if (args.authenv) {
+if (args.authenv || config.auth.use_env) {
   if (process.env.TR_AUTH) {
     authentication = process.env.TR_AUTH;
   } else {
     exitWithConfirmation('It seems that TR_AUTH is empty');
   }
-} else if (args.auth) {
-  authentication = args.auth;
+} else if (args.auth || config.auth) {
+  if (typeof (config.auth) === 'string') var myconfig = config.auth;
+  authentication = args.auth || myconfig || config.auth.username + ':' + config.auth.password;
 }
 if (authentication) {
   if (authentication.match(/^[a-zA-Z0-9]+:[^ :]+$/)) {
