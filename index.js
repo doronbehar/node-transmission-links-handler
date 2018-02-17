@@ -98,80 +98,76 @@ function exitWithConfirmation (problem) {
   });
 }
 
-var transmissionConnection = {};
+var transmission;
 
-if (args.host || config.host) {
-  if (typeof (config.host) === 'string') {
-    transmissionConnection.host = config.host;
-  } else {
-    exitWithConfirmation('Please fix your configuration variable "host" to type "string"');
+var transmissionConnection = new Promise(function (resolve, reject) {
+  var conn = {};
+  if (args.host || config.host) {
+    if (typeof (config.host) === 'string') {
+      conn.host = config.host;
+    } else {
+      reject(Error('Please fix your configuration variable "host" to type "string"'));
+    }
+    if (args.host) {
+      conn.host = String(args.host);
+    }
+    if (!conn.host.match(/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$/)) {
+      reject(Error('Please provide a valid host name'));
+    }
   }
-  if (args.host) {
-    transmissionConnection.host = String(args.host);
+  if (args.url || config.url) {
+    if (typeof (config.url) === 'string') {
+      conn.url = config.url;
+    } else {
+      reject(Error('Please fix your configuration variable "url" to type "string"'));
+    }
+    if (args.url) {
+      conn.url = String(args.url);
+    }
   }
-  if (!transmissionConnection.host.match(/^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$/)) {
-    exitWithConfirmation('Please provide a valid host name');
+  if (args.port || config.port) {
+    if (typeof (config.port) === 'number') {
+      conn.port = config.port;
+    }
+    if (args.port) {
+      conn.port = Number(args.port);
+    }
   }
-}
-
-if (args.url || config.url) {
-  if (typeof (config.url) === 'string') {
-    transmissionConnection.url = config.url;
-  } else {
-    exitWithConfirmation('Please fix your configuration variable "url" to type "string"');
+  if (args.ssl || config.ssl) {
+    if (typeof (config.ssl) === 'boolean') {
+      conn.ssl = config.ssl;
+    } else {
+      reject(Error('Please fix your configuration variable "ssl" to type "boolean"'));
+    }
+    if (args.ssl) {
+      conn.ssl = args.ssl;
+    }
   }
-  if (args.url) {
-    transmissionConnection.url = String(args.url);
+  var authentication;
+  if (args.authenv || config.authenv) {
+    if (process.env.TR_AUTH) {
+      authentication = process.env.TR_AUTH;
+    } else {
+      reject(Error('It seems that TR_AUTH is empty'));
+    }
+  } else if (args.auth || config.auth) {
+    var myconfig;
+    if (typeof (config.auth) === 'string') myconfig = config.auth;
+    authentication = args.auth || myconfig || config.auth.username + ':' + config.auth.password;
   }
-}
-
-if (args.port || config.port) {
-  if (typeof (config.port) === 'number') {
-    transmissionConnection.port = config.port;
+  if (authentication) {
+    if (authentication.match(/^[a-zA-Z0-9]+:[^ :]+$/)) {
+      [ conn.username, conn.password ] = authentication.split(':');
+    } else {
+      reject(Error('It doesn\'t seem like authentication is provided in the right format: "username:password"'));
+    }
   }
-  if (args.port) {
-    transmissionConnection.port = Number(args.port);
-  }
-}
-
-if (args.ssl || config.ssl) {
-  if (typeof (config.ssl) === 'boolean') {
-    transmissionConnection.ssl = config.ssl;
-  } else {
-    exitWithConfirmation('Please fix your configuration variable "ssl" to type "boolean"');
-  }
-  if (args.ssl) {
-    transmissionConnection.ssl = args.ssl;
-  }
-}
-
-var authentication;
-if (args.authenv || config.authenv) {
-  if (process.env.TR_AUTH) {
-    authentication = process.env.TR_AUTH;
-  } else {
-    exitWithConfirmation('It seems that TR_AUTH is empty');
-  }
-} else if (args.auth || config.auth) {
-  if (typeof (config.auth) === 'string') var myconfig = config.auth;
-  authentication = args.auth || myconfig || config.auth.username + ':' + config.auth.password;
-}
-if (authentication) {
-  if (authentication.match(/^[a-zA-Z0-9]+:[^ :]+$/)) {
-    [ transmissionConnection.username, transmissionConnection.password ] = authentication.split(':');
-  } else {
-    exitWithConfirmation('It doesn\'t seem like authentication is provided in the right format: "username:password"');
-  }
-}
-
-var transmission = new Transmission(transmissionConnection);
-
-// Check connection to transmission and exit if can't connect
-transmission.sessionStats(function (err, result) {
-  if (err) {
-    exitWithConfirmation('can\'t connect to transmission');
-    throw err;
-  }
+  transmission = new Transmission(conn);
+  transmission.sessionStats(function (err, result) {
+    if (err) {
+      reject(err);
+    }
+  });
 });
 
 // variable used for arguments addition confirmations
@@ -219,4 +215,8 @@ function ask () {
   });
 }
 
-ask();
+transmissionConnection.then(function (result) {
+  ask();
+}, function (err) {
+  exitWithConfirmation(err);
+});
