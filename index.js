@@ -7,16 +7,6 @@ var Transmission = require('transmission');
 var ParseTorrentFile = require('parse-torrent-file');
 var path = require('path');
 var fs = require('fs');
-// exit the program and prompt for confirmation before actually exiting
-function exitWithConfirmation (problem) {
-  inquirer.prompt({
-    type: 'input',
-    name: 'continue',
-    message: problem + ', press any key to continue'
-  }).then(answers => {
-    process.exit(3);
-  });
-}
 var xdgBasedir = require('xdg-basedir');
 var configDir = xdgBasedir.config + '/transmission-links-handler';
 var config = {};
@@ -94,6 +84,19 @@ parser.addArgument(
 );
 
 var args = parser.parseArgs();
+
+// Up untill here we don't need any synchronous jobs to do.
+
+// exit the program and prompt for confirmation before actually exiting
+function exitWithConfirmation (problem) {
+  inquirer.prompt({
+    type: 'input',
+    name: 'continue',
+    message: problem + ', press any key to continue'
+  }).then(answers => {
+    process.exit(3);
+  });
+}
 
 var transmissionConnection = {};
 
