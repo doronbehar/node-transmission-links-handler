@@ -88,13 +88,13 @@ var args = parser.parseArgs();
 // Up untill here we don't need any synchronous jobs to do.
 
 // exit the program and prompt for confirmation before actually exiting
-function exitWithConfirmation (problem) {
+function exitWithConfirmation (problem, exitCode) {
   inquirer.prompt({
     type: 'input',
     name: 'continue',
     message: problem + ', press any key to continue'
   }).then(answers => {
-    process.exit(3);
+    process.exit(exitCode);
   });
 }
 
@@ -218,5 +218,5 @@ function ask () {
 transmissionConnection.then(function (result) {
   ask();
 }, function (err) {
-  exitWithConfirmation(err);
+  exitWithConfirmation(err, 3);
 });
