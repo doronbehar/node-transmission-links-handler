@@ -14,9 +14,7 @@ function exitWithConfirmation (problem) {
     name: 'continue',
     message: problem + ', press any key to continue'
   }).then(answers => {
-    if (answers.continue) {
-      process.exit(3);
-    }
+    process.exit(3);
   });
 }
 var xdgBasedir = require('xdg-basedir');
