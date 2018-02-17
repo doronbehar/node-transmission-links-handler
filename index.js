@@ -165,7 +165,7 @@ var transmissionConnection = new Promise(function (resolve, reject) {
   transmission = new Transmission(conn);
   transmission.sessionStats(function (err, result) {
     if (err) {
-      reject(err);
+      reject(Error('Couldn\'t connect to transmission daemon, ' + err));
     }
   });
 });
