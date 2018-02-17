@@ -7,7 +7,6 @@ var Transmission = require('transmission');
 var ParseTorrentFile = require('parse-torrent-file');
 var path = require('path');
 var fs = require('fs');
-var xdgBasedir = require('xdg-basedir');
 // exit the program and prompt for confirmation before actually exiting
 function exitWithConfirmation (problem) {
   inquirer.prompt({
@@ -20,11 +19,17 @@ function exitWithConfirmation (problem) {
     }
   });
 }
-process.env.NODE_CONFIG_DIR = xdgBasedir.config + '/transmission-links-handler';
-try {
-  var config = require('config');
-} catch (e) {
-  exitWithConfirmation('The configuration file is either not readable or has no valid syntax');
+var xdgBasedir = require('xdg-basedir');
+var configDir = xdgBasedir.config + '/transmission-links-handler';
+var config = {};
+if (fs.existsSync(configDir)) {
+  try {
+    process.env.NODE_CONFIG_DIR = configDir;
+    config = require('config');
+  } catch (e) {
+    config = {};
+    console.warn('The configuration file inside ' + configDir + ' is either not readable or has no valid syntax therefor it will be ignored');
+  }
 }
 
 var Argparse = require('argparse').ArgumentParser;
@@ -140,7 +145,7 @@ if (args.ssl || config.ssl) {
 }
 
 var authentication;
-if (args.authenv || config.auth.use_env) {
+if (args.authenv || config.authenv) {
   if (process.env.TR_AUTH) {
     authentication = process.env.TR_AUTH;
   } else {
