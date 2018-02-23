@@ -174,7 +174,7 @@ var combineArgumentsAndConfig = new Promise(function (resolve, reject) {
 function checkTransmissionConnection (conn) {
   return new Promise(function (resolve, reject) {
   transmission = new Transmission(conn);
-  transmission.sessionStats(function (err, result) {
+    transmission.session(function (err, result) {
     if (err) {
       reject(Error('Couldn\'t connect to transmission daemon, ' + err));
     } else {
