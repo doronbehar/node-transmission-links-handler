@@ -5,7 +5,6 @@ var inquirer = require('inquirer');
 var Magnet = require('magnet-uri');
 var Transmission = require('transmission');
 var ParseTorrentFile = require('parse-torrent-file');
-var path = require('path');
 var fs = require('fs');
 var xdgBasedir = require('xdg-basedir');
 var configDir = xdgBasedir.config + '/transmission-links-handler';
@@ -173,64 +172,116 @@ var combineArgumentsAndConfig = new Promise(function (resolve, reject) {
 
 function checkTransmissionConnection (conn) {
   return new Promise(function (resolve, reject) {
-  transmission = new Transmission(conn);
+    transmission = new Transmission(conn);
     transmission.session(function (err, result) {
-    if (err) {
-      reject(Error('Couldn\'t connect to transmission daemon, ' + err));
-    } else {
-      resolve(result);
-    }
-  });
+      if (err) {
+        reject(Error('Couldn\'t connect to transmission daemon, ' + err));
+      } else {
+        resolve(result);
+      }
+    });
   });
 }
 
-// variable used for arguments addition confirmations
-var myTorrent = {};
-myTorrent.iterator = 0;
-function ask () {
-  myTorrent.argument = args.torrents[myTorrent.iterator];
-  if (myTorrent.argument.match(/magnet:/)) {
-    var magnet;
-    try {
-      magnet = Magnet.decode(myTorrent.argument);
-    } catch (e) {
-      console.error(e);
-      process.exit(2);
+var checkTorrentsArguments = new Promise(function (resolve, reject) {
+  var names = [];
+  for (var i = 0; i < args.torrents.length; i++) {
+    if (args.torrents[i].match(/magnet:/)) {
+      try {
+        names[i] = Magnet.decode(args.torrents[i]).dn;
+      } catch (e) {
+        reject(e);
+      }
+    } else {
+      var file;
+      if (fs.existsSync(args.torrents[i])) {
+        try {
+          file = fs.readFileSync(args.torrents[i]);
+        } catch (e) {
+          reject(e);
+        }
+      }
+      try {
+        names[i] = ParseTorrentFile(file).name;
+      } catch (e) {
+        reject(e);
+      }
     }
-    myTorrent.name = magnet.dn;
-  } else {
-    myTorrent.file = fs.readFileSync(path.join(__dirname, myTorrent.argument));
-    var t;
-    try {
-      t = ParseTorrentFile(myTorrent.file);
-    } catch (e) {
-      console.error(e);
-      process.exit(2);
-    }
-    myTorrent.name = t.name;
   }
-  inquirer.prompt({
-    type: 'confirm',
-    name: 'add',
-    message: 'Would you like to add the torrent "' + myTorrent.name + '"?',
-    default: true
-  }).then(answers => {
-    if (answers.add) {
-      console.log('adding a torrent');
-      // TODO
-      // transmission.add();
-    }
-    if (myTorrent.iterator < args.torrents.length - 1) {
-      myTorrent.iterator++;
-      ask();
-    } else {
-      return 0;
-    }
+  resolve(names);
+});
+
+function checkCustomOptions (path) {
+  return new Promise(function (resolve, reject) {
+    fs.statSync(path, function (err, stats) {
+      if (err) {
+        reject(Error('no such file or directory: "' + path));
+      } else {
+        if (stats.isDirectory(path)) {
+          resolve(path);
+        } else {
+          reject(Error('"' + path + '" is not a directory'));
+        }
+      }
+    });
   });
 }
 
-transmissionConnection.then(function (result) {
-  ask();
+combineArgumentsAndConfig.then(function (connection) {
+  checkTransmissionConnection(connection).then(function (session) {
+    checkTorrentsArguments.then(function (names) {
+      (function loop (i) {
+        if (i < args.torrents.length) {
+          new Promise((resolve, reject) => {
+            inquirer.prompt({
+              type: 'confirm',
+              name: 'answer',
+              message: 'Would you like to add the torrent: "' + names[i],
+              default: true
+            }).then(confirmation => {
+              if (confirmation.answer) {
+                inquirer.prompt({
+                  type: 'input',
+                  name: 'requested',
+                  message: 'Choose the torrent\'s download-dir: (' + session['download-dir'] + ')'
+                }).then(path => {
+                  var options = {};
+                  if (path.requested !== '') {
+                    checkCustomOptions(path.requested).then(function (answer) {
+                      if (answer) {
+                        options = {'download-dir': answer};
+                      }
+                    }, function (err) {
+                      console.error(err + '\nthe default download-dir will be used');
+                    });
+                  }
+                  function transmissionAddUrlHandler (err, response) {
+                    if (err) {
+                      console.error('During torrent addition, the following error returned:\n' + err);
+                      if (response) {
+                        console.error('yet, it seems it has not failed completely and it returned the following response:');
+                        console.error(JSON.stringify(response, null, 2));
+                      }
+                      exitWithConfirmation('', 1);
+                    }
+                  }
+                  if (options !== {}) {
+                    transmission.addUrl(args.torrents[i], transmissionAddUrlHandler);
+                  } else {
+                    transmission.addUrl(args.torrents[i], options, transmissionAddUrlHandler);
+                  }
+                });
+              }
+            });
+          }).then(loop.bind(null, i + 1));
+        }
+      })(0);
+    }, function (err) {
+      exitWithConfirmation(err, 1);
+    });
+  }, function (err) {
+    exitWithConfirmation(err, 3);
+  });
 }, function (err) {
-  exitWithConfirmation(err, 3);
+  exitWithConfirmation(err, 4);
 });
