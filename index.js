@@ -89,10 +89,16 @@ var args = parser.parseArgs();
 
 // exit the program and prompt for confirmation before actually exiting
 function exitWithConfirmation (problem, exitCode) {
+  var msg;
+  if (problem !== '') {
+    msg = problem + ', press any key to continue';
+  } else {
+    msg = 'press any key to continue';
+  }
   inquirer.prompt({
     type: 'input',
     name: 'continue',
-    message: problem + ', press any key to continue'
+    message: msg
   }).then(answers => {
     process.exit(exitCode);
   });
