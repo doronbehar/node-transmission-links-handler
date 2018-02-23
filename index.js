@@ -106,7 +106,7 @@ function exitWithConfirmation (problem, exitCode) {
 
 var transmission;
 
-var transmissionConnection = new Promise(function (resolve, reject) {
+var combineArgumentsAndConfig = new Promise(function (resolve, reject) {
   var conn = {};
   if (args.host || config.host) {
     if (typeof (config.host) === 'string') {
@@ -168,6 +168,11 @@ var transmissionConnection = new Promise(function (resolve, reject) {
       reject(Error('It doesn\'t seem like authentication is provided in the right format: "username:password"'));
     }
   }
+  resolve(conn);
+});
+
+function checkTransmissionConnection (conn) {
+  return new Promise(function (resolve, reject) {
   transmission = new Transmission(conn);
   transmission.sessionStats(function (err, result) {
     if (err) {
@@ -176,7 +181,8 @@ var transmissionConnection = new Promise(function (resolve, reject) {
       resolve(result);
     }
   });
-});
+  });
+}
 
 // variable used for arguments addition confirmations
 var myTorrent = {};
