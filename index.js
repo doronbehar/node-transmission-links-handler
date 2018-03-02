@@ -266,9 +266,17 @@ combineArgumentsAndConfig.then(function (connection) {
                     }
                   }
                   if (options !== {}) {
-                    transmission.addUrl(args.torrents[i], transmissionAddUrlHandler);
+                    if (args.torrents[i].match(/magnet:/)) {
+                      transmission.addUrl(args.torrents[i], transmissionAddUrlHandler);
+                    } else {
+                      transmission.addFile(args.torrents[i], transmissionAddUrlHandler);
+                    }
                   } else {
-                    transmission.addUrl(args.torrents[i], options, transmissionAddUrlHandler);
+                    if (args.torrents[i].match(/magnet:/)) {
+                      transmission.addUrl(args.torrents[i], options, transmissionAddUrlHandler);
+                    } else {
+                      transmission.addFile(args.torrents[i], options, transmissionAddUrlHandler);
+                    }
                   }
                 });
               }
