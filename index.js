@@ -149,7 +149,7 @@ var combineArgumentsAndConfig = new Promise(function (resolve, reject) {
     }
   }
   var authentication;
-  if (args.authenv || config.authenv) {
+  if ((args.authenv || config.authenv) && args.auth === undefined) {
     if (process.env.TR_AUTH) {
       authentication = process.env.TR_AUTH;
     } else {
@@ -157,8 +157,10 @@ var combineArgumentsAndConfig = new Promise(function (resolve, reject) {
     }
   } else if (args.auth || config.auth) {
     var myconfig;
-    if (typeof (config.auth) === 'string') myconfig = config.auth;
-    authentication = args.auth || myconfig || config.auth.username + ':' + config.auth.password;
+    if (typeof (config.auth) === 'string') {
+      myconfig = config.auth;
+    }
+    authentication = args.auth[0] || myconfig || config.auth.username + ':' + config.auth.password;
   }
   if (authentication) {
     if (authentication.match(/^[a-zA-Z0-9]+:[^ :]+$/)) {
